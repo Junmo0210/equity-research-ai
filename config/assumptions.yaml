@@ -1,0 +1,53 @@
+# ─────────────────────────────────────────────────────────────
+# 시장 공통 가정 (사람이 관리하는 값 — AI가 바꾸지 않음)
+# 모든 비율은 소수 (0.05 = 5%)
+# ─────────────────────────────────────────────────────────────
+
+markets:
+  US:
+    currency: USD
+    risk_free_rate: auto        # auto = Yahoo ^TNX(미 10년물) 조회, 실패 시 fallback 사용
+    risk_free_fallback: 0.043
+    equity_risk_premium: 0.050
+    marginal_tax_rate: 0.21
+    market_index: "^GSPC"
+    terminal_growth_cap: 0.035  # 영구성장률 상한 (장기 명목 GDP 수준)
+  KR:
+    currency: KRW
+    risk_free_rate: 0.030       # 국고채 10년물 수준으로 직접 관리
+    risk_free_fallback: 0.030
+    equity_risk_premium: 0.060
+    marginal_tax_rate: 0.242    # 법인세 최고세율 + 지방세
+    market_index: "^KS11"
+    terminal_growth_cap: 0.025
+
+valuation:
+  forecast_years: 5
+  mid_year_convention: false
+  beta:
+    lookback_years: 2           # 주간 수익률 2년
+    blume_adjust: true          # 0.67*raw + 0.33
+    floor: 0.5
+    cap: 2.5
+  cost_of_debt_spread: 0.015    # 이자비용/차입금으로 산출 불가 시 rf + spread
+  blend_weights:                # 최종 목표주가 = DCF와 상대가치 가중평균
+    dcf: 0.5
+    relative: 0.5
+  rating_thresholds:            # 상승여력 기준 투자의견 (코드가 결정)
+    buy: 0.15
+    sell: -0.10
+
+# AI가 제안한 가정을 코드가 강제로 제한하는 가드레일
+guardrails:
+  revenue_growth: [-0.30, 0.60]
+  ebit_margin: [-0.30, 0.70]
+  capex_pct_revenue: [0.0, 0.40]
+  da_pct_revenue: [0.0, 0.30]
+  nwc_pct_revenue: [-0.30, 0.50]
+  tax_rate: [0.0, 0.40]
+  terminal_growth: [0.0, 0.035]
+
+ai:
+  model: claude-opus-5-5
+  effort: high
+  max_context_chars: 240000     # 공시 원문을 AI에 전달할 때 상한 (초과 시 잘라낸 사실을 로그에 남김)
